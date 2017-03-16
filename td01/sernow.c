@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	struct sockaddr_in sin;
 	            struct obj objet;
 	            size_t rec;
-
+    pid_t ppid;
 //Creation de la socket
 	int sd = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 	if(sd == -1)
@@ -83,7 +83,14 @@ int main(int argc, char* argv[])
 			exit(-1);
 			break;
     //on est dans le pere
-    default : 			waitpid();
+    default :
+    newsd =accept(sd,0,0);
+		if(newsd==-1)
+		{
+		printf("ERREUR accept");
+		exit( -1);
+		}
+	ppid = fork();
     break;
 
 
@@ -95,3 +102,4 @@ int main(int argc, char* argv[])
 
 
 }
+

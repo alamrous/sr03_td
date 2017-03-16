@@ -9,6 +9,11 @@
 #include "defobj.h"
 #define SO_MAXCONN 5
 
+static void handler(int signal)
+{
+	waitpid(childPID,&status,WUNTRACED)
+}
+
 int main(int argc, char* argv[])
 {
 	struct sockaddr_in sin;
@@ -61,6 +66,7 @@ int main(int argc, char* argv[])
     case 0:
 			 rec =recv(newsd,&objet,sizeof(objet),0);
 			while(rec != 0){
+				sleep(1);
 			if(rec==-1)
 				{
 					printf("Erreur recv");
@@ -68,14 +74,32 @@ int main(int argc, char* argv[])
 				}
 			else
 				{
-
-						printf("quelque chose j'ai recu !\n");
+					if(strcmp("fin",objet.id) == 0)
+					{
+						printf ("\n fermeture connexion socket");
+						close(newsd);
+						signal(SIGCHILD,handler);
+						if(kill(getpid(),0) == -1))
+							printf("Kill error");
+						exit(0);
+					}
+					else{
+									printf("quelque chose j'ai recu !\n");
 						printf("%s \n",objet.id);
-					rec =recv(newsd,&objet,sizeof(objet),0);
+						strcpy(object.id,"newId");
+						send(newsd,&objet,sizeof(objet),0);
+						printf("Envoi objet modifié \n");
+						rec =recv(newsd,&objet,sizeof(objet),0);
+						printf("Nouvelle reception");
+						printf("%s \n",objet.id);
+					}
+
+			
 
 				}
 
                 }
+			
                 break;
    //cas de problème de fork
     case -1:
@@ -83,8 +107,9 @@ int main(int argc, char* argv[])
 			exit(-1);
 			break;
     //on est dans le pere
-    default : 			waitpid();
-    break;
+    default : 			
+			waitpid();
+			break;
 
 
     }

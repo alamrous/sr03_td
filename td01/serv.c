@@ -1,13 +1,26 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include <sys/wait.h>
+#include <signal.h>
+
+#include <arpa/inet.h>
 #include <strings.h>
 #include <netdb.h>
+#include <unistd.h>
 #include "defobj.h"
+
 #define SO_MAXCONN 5
+pid_t pid;
+	int status;
+
+static void handler(int signal)
+{
+	waitpid(pid,&status,WUNTRACED);
+}
 
 int main(int argc, char* argv[])
 {
@@ -53,7 +66,7 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 	//On crée un processus fils
-	pid_t pid = fork();
+	 pid = fork();
     //On fait un switch sur la valeur du fork
     switch((int)pid)
     {
@@ -61,6 +74,7 @@ int main(int argc, char* argv[])
     case 0:
 			 rec =recv(newsd,&objet,sizeof(objet),0);
 			while(rec != 0){
+				sleep(1);
 			if(rec==-1)
 				{
 					printf("Erreur recv");
@@ -68,14 +82,32 @@ int main(int argc, char* argv[])
 				}
 			else
 				{
-
-						printf("quelque chose j'ai recu !\n");
+					if(strcmp("fin",objet.id) == 0)
+					{
+						printf ("\n fermeture connexion socket");
+						close(newsd);
+						signal(SIGCHLD,handler);
+						if(kill(getpid(),0) == -1)
+							printf("Kill error");
+						exit(0);
+					}
+					else{
+									printf("quelque chose j'ai recu !\n");
 						printf("%s \n",objet.id);
-					rec =recv(newsd,&objet,sizeof(objet),0);
+						strcpy(objet.id,"newId");
+						send(newsd,&objet,sizeof(objet),0);
+						printf("Envoi objet modifié \n");
+						rec =recv(newsd,&objet,sizeof(objet),0);
+						printf("Nouvelle reception");
+						printf("%s \n",objet.id);
+					}
+
+			
 
 				}
 
                 }
+			
                 break;
    //cas de problème de fork
     case -1:
@@ -83,8 +115,9 @@ int main(int argc, char* argv[])
 			exit(-1);
 			break;
     //on est dans le pere
-    default : 			waitpid();
-    break;
+    default : 			
+
+			break;
 
 
     }
